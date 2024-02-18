@@ -10,6 +10,7 @@ struct u8_core {
 	struct u8_regs regs;
 	uint8_t cur_dsr;
 	uint8_t last_swi;
+	bool u16_mode;
 	struct u8_mem mem;
 	struct u8_mem codemem;
 };

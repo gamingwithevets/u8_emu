@@ -239,6 +239,7 @@ void instr_shift(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struc
 
 void instr_mov(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
 	uint64_t val = oper_read(core, op1);
+	if (op1->type == OPER_REG_CTRL && op1->reg == 3 && core->u16_mode) val = 0xff;
 
 	// Do we update the flags?
 	if (flags == 0) {
@@ -309,6 +310,7 @@ void instr_store(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struc
 
 // Push/Pop Instructions
 void instr_push(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
+	if (core->u16_mode) core->regs.sp & 0xfffe;
 	core->regs.sp -= (op0->size == 1) ? 2 : op0->size;
 	write_mem_data(core, core->cur_dsr, core->regs.sp, op0->size, oper_read(core, op0));
 }
@@ -339,6 +341,8 @@ uint8_t get_epsw(struct u8_core *core) {
 void instr_push_list(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
 	uint64_t list = oper_read(core, op0);
 
+	if (core->u16_mode) core->regs.sp & 0xfffe;
+
 	if (list & 0x2) { // ELR
 		core->regs.sp -= 2;
 		write_mem_data(core, core->cur_dsr, core->regs.sp, 2, get_ecsr(core));
@@ -365,12 +369,15 @@ void instr_push_list(struct u8_core *core, uint8_t flags, struct u8_oper *op0, s
 }
 
 void instr_pop(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
+	if (core->u16_mode) core->regs.sp & 0xfffe;
 	oper_write(core, op0, read_mem_data(core, core->cur_dsr, core->regs.sp, op0->size));
 	core->regs.sp += (op0->size == 1) ? 2 : op0->size;
 }
 
 void instr_pop_list(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
 	uint64_t list = oper_read(core, op0);
+	
+	if (core->u16_mode) core->regs.sp & 0xfffe;
 
 	if (list & 0x1) { // EA
 		core->regs.ea = read_mem_data(core, core->cur_dsr, core->regs.sp, 2);

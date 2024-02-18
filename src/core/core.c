@@ -25,7 +25,7 @@ void u8_step(struct u8_core *core) {
 
 	// Decode the instruction
 	struct u8_instr *instr = u8_decode(instr_word);
-
+	core->regs.pc &= 0xfffe;
 	if (instr == NULL) {
 		printf("ERROR: Invalid instruction %04X @ %X:%04XH\n", instr_word, core->regs.csr, core->regs.pc);
 		return;
@@ -47,8 +47,9 @@ void u8_step(struct u8_core *core) {
 
 uint16_t u8_fetch(struct u8_core *core) {
 	// Read from code memory at PC
-	uint16_t instr = read_mem_code(core, core->regs.csr, core->regs.pc, 2);
+	uint16_t instr = read_mem_code(core, core->regs.csr, core->regs.pc & 0xfffe, 2);
 	core->regs.pc += 2;
+	core->regs.pc &= 0xfffe;
 
 	return instr;
 }

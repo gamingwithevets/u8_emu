@@ -334,7 +334,7 @@ void oper_write(struct u8_core *core, struct u8_oper *oper, uint64_t val) {
 			case 0: core->regs.ecsr[core->regs.psw & 3] = val; break;
 			case 1: core->regs.elr[core->regs.psw & 3] = val; break;
 			case 2: core->regs.psw = val; break;
-			case 3: core->regs.epsw[core->regs.psw & 3] = val; break;
+			case 3: if ((core->regs.psw & 3) != 0) core->regs.epsw[(core->regs.psw & 3) - 1] = val; break;
 			case 4: core->regs.sp = val; break;
 			case 5: core->regs.csr = val; break;
 		} break;
