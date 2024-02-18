@@ -10,6 +10,10 @@ struct u8_core {
 	struct u8_regs regs;
 	uint8_t cur_dsr;
 	uint8_t last_swi;
+	uint32_t last_read;
+	uint8_t last_read_size;
+	uint32_t last_write;
+	uint8_t last_write_size;
 	bool u16_mode;
 	struct u8_mem mem;
 	struct u8_mem codemem;

@@ -7,6 +7,15 @@
 
 static uint64_t access_mem(struct u8_core *core, uint8_t seg, uint16_t offset, uint8_t size, bool rw, uint64_t val) {
 	if (!(size && (((size - 1) & size) == 0))) __builtin_unreachable();
+	
+	if (rw) {
+		core->last_write = (seg << 16) + offset;
+		core->last_write_size = size;
+	} else {
+		core->last_read = (seg << 16) + offset;
+		core->last_read_size = size;
+	}
+	
 	// Find region
 	uint32_t addr = ((uint32_t)seg << 16) | offset;
 	for (int i = 0; i < core->mem.num_regions; i++) {
