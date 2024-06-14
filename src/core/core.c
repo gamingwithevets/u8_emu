@@ -44,6 +44,7 @@ void u8_step(struct u8_core *core) {
 	// Call the instruction handler
 	instr->handler(core, instr->flags, &op0, &op1);
 	
+	core->regs.csr &= 0xf;
 	core->regs.pc &= 0xfffe;
 }
 
