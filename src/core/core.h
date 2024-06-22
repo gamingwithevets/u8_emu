@@ -15,6 +15,7 @@ struct u8_core {
 	uint32_t last_write;
 	uint8_t last_write_size;
 	bool u16_mode;
+	bool small_mm;
 	struct u8_mem mem;
 	struct u8_mem codemem;
 };

@@ -10,7 +10,7 @@ static uint64_t access_mem(struct u8_core *core, uint8_t seg, uint16_t offset, u
 	if (!(size && (((size - 1) & size) == 0))) __builtin_unreachable();
 	
 	// Find region
-	uint32_t addr = ((uint32_t)seg << 16) | offset;
+	uint32_t addr = core->small_mm ? offset : ((uint32_t)seg << 16) | offset;
 	for (int i = 0; i < core->mem.num_regions; i++) {
 		// Is the address in the current region?
 		uint32_t addr_l = core->mem.regions[i].addr_l;
@@ -65,7 +65,7 @@ uint64_t read_mem_data(struct u8_core *core, uint8_t dsr, uint16_t offset, uint8
 
 uint64_t read_mem_code(struct u8_core *core, uint8_t csr, uint16_t offset, uint8_t size) {
 	if (__builtin_expect(size, 2)) {
-		uint32_t addr = ((uint32_t)csr << 16) | offset;
+		uint32_t addr = core->small_mm ? offset : ((uint32_t)csr << 16) | offset;
 
 		for (int i = 0; i < core->codemem.num_regions; i++) {
 			struct u8_mem_reg region = core->codemem.regions[i];
@@ -88,7 +88,7 @@ uint64_t read_mem_code(struct u8_core *core, uint8_t csr, uint16_t offset, uint8
 			}
 		}
 	}
-	return 0;
+	return 0xff;
 }
 
 void write_mem_data(struct u8_core *core, uint8_t dsr, uint16_t offset, uint8_t size, uint64_t val) {

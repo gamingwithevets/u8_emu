@@ -316,6 +316,7 @@ void instr_push(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct
 }
 
 uint8_t get_ecsr(struct u8_core *core) {
+	if (core->small_mm) return 0;
 	uint8_t elevel = core->regs.psw & 3;
 	switch (elevel) {
 		case 0: return core->regs.csr;
@@ -356,8 +357,10 @@ void instr_push_list(struct u8_core *core, uint8_t flags, struct u8_oper *op0, s
 	}
 
 	if (list & 0x8) { // LR
-		core->regs.sp -= 2;
-		write_mem_data(core, core->cur_dsr, core->regs.sp, 2, core->regs.lcsr);
+		if (!core->small_mm) {
+			core->regs.sp -= 2;
+			write_mem_data(core, core->cur_dsr, core->regs.sp, 2, core->regs.lcsr);
+		}
 		core->regs.sp -= 2;
 		write_mem_data(core, core->cur_dsr, core->regs.sp, 2, core->regs.lr);
 	}	
@@ -399,8 +402,10 @@ void instr_pop_list(struct u8_core *core, uint8_t flags, struct u8_oper *op0, st
 	if (list & 0x2) { // PC
 		core->regs.pc = read_mem_data(core, core->cur_dsr, core->regs.sp, 2);
 		core->regs.sp += 2;
-		core->regs.csr = read_mem_data(core, core->cur_dsr, core->regs.sp, 1);
-		core->regs.sp += 2;
+		if (!core->small_mm) {
+			core->regs.csr = read_mem_data(core, core->cur_dsr, core->regs.sp, 1);
+			core->regs.sp += 2;
+		}
 	}
 }
 
@@ -629,10 +634,10 @@ void instr_swi(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct 
 	core->regs.psw &= 0b11111100;
 	core->regs.psw |= 0b00000001;
 	core->regs.elr[0] = core->regs.pc + 2;
-	core->regs.ecsr[0] = core->regs.csr;
+	if (!core->small_mm) core->regs.ecsr[0] = core->regs.csr;
 	core->regs.psw &= 0b11110111;
 	core->regs.pc = read_mem_data(core, 0, 0x0080 + 2*op0->imm, 2);
-	core->regs.csr = 0x00;
+	if (!core->small_mm) core->regs.csr = 0x00;
 	core->last_swi = op0->imm;
 }
 
@@ -641,12 +646,12 @@ void instr_brk(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct 
 
 	if (elevel <= 1) {
 		core->regs.elr[1] = core->regs.pc;
-		core->regs.ecsr[1] = core->regs.csr;
+		if (!core->small_mm) core->regs.ecsr[1] = core->regs.csr;
 		core->regs.epsw[1] = core->regs.psw;
 		core->regs.psw &= 0b11111100;
 		core->regs.psw |= 0b00000010;
 		core->regs.pc = read_mem_data(core, 0, 0x0004, 2);
-		core->regs.csr = 0x00;
+		if (!core->small_mm) core->regs.csr = 0x00;
 	} else {
 		u8_reset(core);
 	}
@@ -654,14 +659,14 @@ void instr_brk(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct 
 
 // Branch Instructions
 void instr_b(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
-	core->regs.csr = oper_read(core, op0);
+	if (!core->small_mm) core->regs.csr = oper_read(core, op0);
 	core->regs.pc = op1->addr;
 }
 
 void instr_bl(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
-	core->regs.lcsr = core->regs.csr;
+	if (!core->small_mm) core->regs.lcsr = core->regs.csr;
 	core->regs.lr = core->regs.pc;
-	core->regs.csr = oper_read(core, op0);
+	if (!core->small_mm) core->regs.csr = oper_read(core, op0);
 	core->regs.pc = op1->addr;
 }
 
@@ -725,12 +730,12 @@ void instr_dec(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct 
 }
 
 void instr_rt(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
-	core->regs.csr = core->regs.lcsr;
+	if (!core->small_mm) core->regs.csr = core->regs.lcsr;
 	core->regs.pc = core->regs.lr;
 }
 
 void instr_rti(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct u8_oper *op1) {
-	core->regs.csr = get_ecsr(core);
+	if (!core->small_mm) core->regs.csr = get_ecsr(core);
 	core->regs.pc = get_elr(core);
 	core->regs.psw = get_epsw(core);
 }

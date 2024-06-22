@@ -11,8 +11,8 @@ void u8_reset(struct u8_core *core) {
 	core->cur_dsr = 0;
 
 	// Set SP and PC
-	core->regs.sp = read_mem_data(core, 0, 0x0000, 2);
-	core->regs.pc = read_mem_data(core, 0, 0x0002, 2);
+	core->regs.sp = read_mem_code(core, 0, 0x0000, 2);
+	core->regs.pc = read_mem_code(core, 0, 0x0002, 2);
 }
 
 /* Execute one instruction */
