@@ -633,7 +633,7 @@ void instr_swi(struct u8_core *core, uint8_t flags, struct u8_oper *op0, struct 
 	core->regs.epsw[0] = core->regs.psw;
 	core->regs.psw &= 0b11111100;
 	core->regs.psw |= 0b00000001;
-	core->regs.elr[0] = core->regs.pc + 2;
+	core->regs.elr[0] = core->regs.pc;
 	if (!core->small_mm) core->regs.ecsr[0] = core->regs.csr;
 	core->regs.psw &= 0b11110111;
 	core->regs.pc = read_mem_data(core, 0, 0x0080 + 2*op0->imm, 2);
