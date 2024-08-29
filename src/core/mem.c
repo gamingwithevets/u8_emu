@@ -24,7 +24,6 @@ static uint64_t access_mem(struct u8_core *core, uint8_t seg, uint16_t offset, u
 			// Read each byte in little endian order
 			if (!rw) val = 0;
 			if (__builtin_expect(core->mem.regions[i].acc == U8_MACC_ARR, 1)) {
-#if defined (__LITTLE_ENDIAN__) || defined (__x86_64__) || defined (__i686__) || defined (__aarch64__)
 				if (__builtin_expect(rw, 0)) {
 				core->mem.regions[i].dirty &= 2;
 					memcpy(&core->mem.regions[i].array[addr], &val, size);
@@ -35,10 +34,7 @@ static uint64_t access_mem(struct u8_core *core, uint8_t seg, uint16_t offset, u
 						memcpy(&val, &core->mem.regions[i].array[addr], size);
 					}
 				}
-			return val;
-#else
-#error big endian is not big fast!
-#endif
+				return val;
 			} else {
 				if (rw) {
 					for (int x = 0; x < size; x++) {
