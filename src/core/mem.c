@@ -8,7 +8,7 @@
 
 static uint64_t access_mem(struct u8_core *core, uint8_t seg, uint16_t offset, uint8_t size, bool rw, uint64_t val) {
 	if (!(size && (((size - 1) & size) == 0))) __builtin_unreachable();
-	
+
 	// Find region
 	uint32_t addr = core->small_mm ? offset : ((uint32_t)seg << 16) | offset;
 	for (int i = 0; i < core->mem.num_regions; i++) {
@@ -18,6 +18,8 @@ static uint64_t access_mem(struct u8_core *core, uint8_t seg, uint16_t offset, u
 
 		if (addr >= addr_l && addr <= addr_h && (core->mem.regions[i].type <= U8_REGION_DATA)) {
 			if (rw && !core->mem.regions[i].rw) return 0;
+			if (rw) core->last_write_success = true;
+			else core->last_read_success = true;
 
 			addr -= addr_l;
 
@@ -25,7 +27,7 @@ static uint64_t access_mem(struct u8_core *core, uint8_t seg, uint16_t offset, u
 			if (!rw) val = 0;
 			if (__builtin_expect(core->mem.regions[i].acc == U8_MACC_ARR, 1)) {
 				if (__builtin_expect(rw, 0)) {
-				core->mem.regions[i].dirty &= 2;
+					core->mem.regions[i].dirty &= 2;
 					memcpy(&core->mem.regions[i].array[addr], &val, size);
 				} else {
 					if (__builtin_expect(size == 1, 1)) {

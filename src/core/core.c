@@ -20,7 +20,7 @@ void u8_step(struct u8_core *core) {
 	core->last_swi = 0xff;
 	core->last_read_size = 0;
 	core->last_write_size = 0;
-	
+
 	// Fetch the next instruction
 	uint16_t instr_word = u8_fetch(core);
 

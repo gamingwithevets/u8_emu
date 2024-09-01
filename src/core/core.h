@@ -18,6 +18,8 @@ struct u8_core {
 	bool small_mm;
 	struct u8_mem mem;
 	struct u8_mem codemem;
+	bool last_read_success;
+	bool last_write_success;
 };
 
 void u8_reset(struct u8_core *core);

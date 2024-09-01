@@ -321,6 +321,7 @@ uint64_t oper_read(struct u8_core *core, struct u8_oper *oper) {
 		case OPER_MEM:
 			core->last_read = (core->cur_dsr << 16) + oper->addr;
 			core->last_read_size = oper->size;
+			core->last_read_success = false;
 			return read_mem_data(core, core->cur_dsr, oper->addr, oper->size);
 
 		case OPER_IMM: return (uint64_t) oper->imm;
@@ -345,6 +346,7 @@ void oper_write(struct u8_core *core, struct u8_oper *oper, uint64_t val) {
 		case OPER_MEM:
 			core->last_write = (core->cur_dsr << 16) + oper->addr;
 			core->last_write_size = oper->size;
+			core->last_write_success = false;
 			write_mem_data(core, core->cur_dsr, oper->addr, oper->size, val);
 			break;
 
