@@ -20,29 +20,24 @@ void u8_step(struct u8_core *core) {
 	core->last_swi = 0xff;
 	core->last_read_size = 0;
 	core->last_write_size = 0;
+	uint8_t csr = core->regs.csr;
+	uint16_t pc = core->regs.pc;
 
 	// Fetch the next instruction
 	uint16_t instr_word = u8_fetch(core);
 
 	// Decode the instruction
 	struct u8_instr *instr = u8_decode(instr_word);
-	if (instr == NULL) {
-		printf("ERROR: Invalid instruction %04X @ %X:%04XH\n", instr_word, core->regs.csr, core->regs.pc - 2);
-		return;
+	if (instr == NULL) printf("ERROR: Invalid instruction %04X @ %X:%04XH\n", instr_word, csr, pc);
+	else {
+		// Operands
+		struct u8_oper op0, op1;
+		if (instr->op0.handler != NULL) op0 = instr->op0.handler(core, &instr->op0, (instr_word & instr->op0.mask) >> instr->op0.shift);
+
+		if (instr->op1.handler != NULL) op1 = instr->op1.handler(core, &instr->op1, (instr_word & instr->op1.mask) >> instr->op1.shift);
+		
+		instr->handler(core, instr->flags, &op0, &op1);
 	}
-
-	// Operands
-	struct u8_oper op0, op1;
-	if (instr->op0.handler != NULL)
-		op0 = instr->op0.handler(core, &instr->op0,
-			(instr_word & instr->op0.mask) >> instr->op0.shift);
-
-	if (instr->op1.handler != NULL)
-		op1 = instr->op1.handler(core, &instr->op1,
-			(instr_word & instr->op1.mask) >> instr->op1.shift);
-	
-	// Call the instruction handler
-	instr->handler(core, instr->flags, &op0, &op1);
 	
 	core->regs.csr &= 0xf;
 	core->regs.pc &= 0xfffe;
