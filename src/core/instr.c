@@ -319,6 +319,7 @@ uint64_t oper_read(struct u8_core *core, struct u8_oper *oper) {
 		}
 
 		case OPER_MEM:
+			if (oper->size != 1) oper->addr &= ~1;
 			core->last_read = (core->cur_dsr << 16) + oper->addr;
 			core->last_read_size = oper->size;
 			core->last_read_success = false;
